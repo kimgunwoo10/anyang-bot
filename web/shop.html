@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>금단증상 새벽 상점</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=Nanum+Pen+Script&display=swap">
+<style>
+  /* ---------- 기본(새벽) 팔레트 ---------- */
+  :root{
+    --bg:linear-gradient(180deg,#07070f 0%,#101020 55%,#141430 82%,#1c1a3e 94%,#2b2050 100%);
+    --surface:rgba(21,21,42,.62);
+    --surface-solid:#15152a;
+    --line:#26264a;
+    --line-soft:#1c1c38;
+    --chip:#101024;
+    --ink:#eae7f4;
+    --dim:#8f8bae;
+    --faint:#5d5a7c;
+    --pink:#ffa3cf;
+    --lav:#a48fff;
+    --cyan:#8fe3de;
+    --h1-glow:0 0 40px rgba(164,143,255,.25);
+    --serif:"Gowun Batang","Nanum Myeongjo",serif;
+    --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    --pen:"Nanum Pen Script",cursive;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--bg);color:var(--ink);font-family:var(--sans);
+    font-size:15px;line-height:1.65;min-height:100vh;overflow-x:hidden;
+  }
+  #stars{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:1;transition:opacity .8s ease}
+  .page{position:relative;z-index:1;max-width:1060px;margin:0 auto;padding:0 24px 120px}
+
+  /* ---------- 시간대별 팔레트 ---------- */
+  body.p-morning{
+    --bg:linear-gradient(180deg,#7fa4d4 0%,#aec3e8 28%,#e9c3c4 58%,#ffd6a4 84%,#ffe9c6 100%);
+    --surface:rgba(255,255,255,.55);--surface-solid:#fbf3ec;
+    --line:rgba(105,90,150,.32);--line-soft:rgba(105,90,150,.18);
+    --chip:rgba(255,255,255,.62);
+    --ink:#2b2447;--dim:#5f5880;--faint:#8b84aa;
+    --pink:#d95f97;--lav:#6f55d8;--cyan:#1f958d;
+    --h1-glow:0 1px 0 rgba(255,255,255,.5);
+  }
+  body.p-morning #stars{opacity:.14}
+  body.p-morning .moon{top:70px;background:radial-gradient(circle at 40% 38%,#fffdf2 0%,#ffe9b0 45%,#ffc971 100%);box-shadow:0 0 70px 26px rgba(255,200,120,.5),0 0 190px 95px rgba(255,170,110,.28)}
+  body.p-morning .moon::after{background:none}
+  body.p-day{
+    --bg:linear-gradient(180deg,#8fbede 0%,#c3ddef 45%,#e8f2f7 80%,#f6f9fb 100%);
+    --surface:rgba(255,255,255,.6);--surface-solid:#f4f8fb;
+    --line:rgba(70,90,130,.3);--line-soft:rgba(70,90,130,.16);
+    --chip:rgba(255,255,255,.66);
+    --ink:#223046;--dim:#55617e;--faint:#8391ab;
+    --pink:#d95f97;--lav:#5f63d8;--cyan:#1f958d;
+    --h1-glow:0 1px 0 rgba(255,255,255,.5);
+  }
+  body.p-day #stars{opacity:0}
+  body.p-day .moon{top:0;background:radial-gradient(circle at 42% 40%,#ffffff 0%,#fff6dc 55%,#ffe6a8 100%);box-shadow:0 0 60px 20px rgba(255,240,200,.6),0 0 150px 70px rgba(255,255,230,.35)}
+  body.p-day .moon::after{background:none}
+  body.p-dusk{
+    --bg:linear-gradient(180deg,#1d1740 0%,#42245c 38%,#83395f 68%,#c05a58 88%,#ea8a5b 100%);
+    --surface:rgba(35,20,50,.52);--surface-solid:#2a1c3e;
+    --line:rgba(255,190,160,.26);--line-soft:rgba(255,190,160,.14);
+    --chip:rgba(20,12,35,.5);
+    --ink:#fdeee6;--dim:#e0b9ad;--faint:#bd9186;
+    --pink:#ffa3cf;--lav:#c9a8ff;--cyan:#8fe3de;
+    --h1-glow:0 0 40px rgba(255,140,100,.3);
+  }
+  body.p-dusk #stars{opacity:.35}
+  body.p-dusk .moon{top:96px;background:radial-gradient(circle at 40% 38%,#ffe9c8 0%,#ff9d5c 55%,#f2703f 100%);box-shadow:0 0 70px 26px rgba(255,130,80,.45),0 0 190px 95px rgba(240,90,60,.25)}
+  body.p-dusk .moon::after{background:none}
+  body.p-dusk footer{color:#f9e6d8}
+  body.p-night{
+    --bg:linear-gradient(180deg,#04050d 0%,#090c1e 50%,#0e1330 85%,#141a44 100%);
+    --h1-glow:0 0 40px rgba(143,163,255,.25);
+  }
+  body.p-night .moon{background:radial-gradient(circle at 38% 36%,#ffffff 0%,#eef0f5 45%,#cfd6e4 100%);box-shadow:0 0 60px 18px rgba(220,230,255,.2),0 0 150px 65px rgba(150,180,255,.12)}
+
+  /* ---------- top bar ---------- */
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0 18px}
+  .server{display:flex;align-items:baseline;gap:10px}
+  .server b{font-family:var(--serif);font-weight:700;font-size:1.05rem;letter-spacing:.02em}
+  .server span{font-size:.78rem;color:var(--faint);letter-spacing:.14em;text-transform:uppercase}
+  .bar-right{display:flex;align-items:center;gap:10px}
+  .balance{
+    display:none;align-items:center;gap:8px;
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:7px 16px 7px 12px;
+    font-variant-numeric:tabular-nums;
+    box-shadow:0 0 22px rgba(164,143,255,.12);
+  }
+  .balance.show{display:flex}
+  .balance b{font-weight:700;font-size:1rem;color:var(--pink)}
+  .balance small{color:var(--dim);font-size:.78rem}
+  .login-btn{
+    display:none;text-decoration:none;
+    font-size:.84rem;font-weight:700;color:#131322;
+    background:var(--pink);border-radius:999px;padding:9px 20px;
+    transition:filter .18s ease;
+  }
+  .login-btn.show{display:inline-block}
+  .login-btn:hover{filter:brightness(1.12)}
+  body.p-morning .login-btn,body.p-day .login-btn{color:#fff}
+  .logout{display:none;font-size:.74rem;color:var(--faint);text-decoration:none}
+  .logout.show{display:inline}
+  .logout:hover{color:var(--dim)}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;padding:64px 0 44px;min-height:300px}
+  .moon{
+    position:absolute;top:8px;right:24px;width:150px;height:150px;border-radius:50%;
+    background:radial-gradient(circle at 38% 36%,#fdf8ea 0%,#f0e6cf 45%,#d9cdb3 100%);
+    box-shadow:0 0 60px 18px rgba(250,240,210,.16),0 0 140px 60px rgba(200,170,255,.10);
+    opacity:.95;transition:top 1s ease;
+  }
+  .moon::after{
+    content:"";position:absolute;inset:0;border-radius:50%;
+    background:radial-gradient(circle at 78% 30%,rgba(13,13,26,.55) 0%,rgba(13,13,26,.35) 34%,transparent 62%);
+  }
+  .hero .eyebrow{font-size:.76rem;letter-spacing:.32em;color:var(--lav);text-transform:uppercase;margin-bottom:18px}
+  .hero h1{
+    font-family:var(--serif);font-weight:700;
+    font-size:clamp(2.2rem,6vw,3.4rem);line-height:1.25;text-wrap:balance;
+    text-shadow:var(--h1-glow);
+  }
+  .hero h1 em{font-style:normal;color:var(--pink)}
+  .hero .pen{font-family:var(--pen);font-size:1.5rem;color:var(--dim);margin-top:14px;transform:rotate(-1.2deg);display:inline-block}
+
+  /* ---------- my status ---------- */
+  .me{
+    margin-top:32px;display:flex;flex-wrap:wrap;gap:22px;align-items:center;
+    background:var(--surface);border:1px solid var(--line);border-radius:18px;
+    padding:20px 24px;backdrop-filter:blur(6px);
+  }
+  .me .who{display:flex;align-items:center;gap:14px;min-width:180px}
+  .avatar{
+    width:46px;height:46px;border-radius:50%;background:var(--chip);
+    border:1px solid var(--line);display:grid;place-items:center;font-size:1.2rem;
+    overflow:hidden;
+  }
+  .avatar img{width:100%;height:100%;object-fit:cover}
+  .who .name{font-weight:700}
+  .who .lv{font-size:.78rem;color:var(--lav);letter-spacing:.06em}
+  .xp{flex:1;min-width:240px}
+  .xp .row{display:flex;justify-content:space-between;font-size:.78rem;color:var(--dim);margin-bottom:7px;font-variant-numeric:tabular-nums}
+  .xp .track{height:8px;border-radius:99px;background:var(--chip);border:1px solid var(--line-soft);overflow:hidden}
+  .xp .fill{
+    height:100%;width:0%;border-radius:99px;
+    background:linear-gradient(90deg,var(--lav),var(--pink));
+    box-shadow:0 0 12px rgba(255,163,207,.5);transition:width .8s ease;
+  }
+  .me .note{font-size:.78rem;color:var(--faint);max-width:24ch}
+  .me.guest{justify-content:space-between}
+  .me.guest p{color:var(--dim);font-size:.9rem}
+
+  /* ---------- tabs / grid ---------- */
+  .shop-head{margin-top:56px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+  .shop-head h2{font-family:var(--serif);font-size:1.5rem;font-weight:700}
+  .shop-head h2 small{display:block;font-family:var(--sans);font-weight:400;font-size:.8rem;color:var(--faint);margin-top:6px;letter-spacing:.04em}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{
+    font-family:var(--sans);font-size:.84rem;color:var(--dim);
+    background:transparent;border:1px solid var(--line);border-radius:999px;
+    padding:7px 16px;cursor:pointer;transition:all .18s ease;
+  }
+  .tab:hover{color:var(--ink);border-color:var(--lav)}
+  .tab:focus-visible{outline:2px solid var(--lav);outline-offset:2px}
+  .tab.on{color:#131322;background:var(--pink);border-color:var(--pink);font-weight:700}
+  body.p-morning .tab.on,body.p-day .tab.on{color:#fff}
+  .grid{margin-top:28px;display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:18px}
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    padding:22px 20px 20px;display:flex;flex-direction:column;gap:12px;
+    transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease;
+    backdrop-filter:blur(4px);
+  }
+  .card:hover{transform:translateY(-3px);border-color:var(--lav);box-shadow:0 8px 34px rgba(0,0,0,.25),0 0 24px rgba(164,143,255,.10)}
+  .card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .card .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1.35rem;background:var(--chip);border:1px solid var(--line-soft)}
+  .rar{font-size:.68rem;letter-spacing:.16em;padding:4px 10px;border-radius:999px;border:1px solid;font-weight:500}
+  .rar.n{color:var(--dim);border-color:var(--line)}
+  .rar.r{color:var(--cyan);border-color:currentColor}
+  .rar.l{color:var(--pink);border-color:currentColor}
+  .card h3{font-size:1.02rem;font-weight:700;letter-spacing:.01em}
+  .card .flavor{font-family:var(--pen);font-size:1.12rem;color:var(--dim);line-height:1.4;min-height:2.2em}
+  .card .meta{font-size:.76rem;color:var(--faint)}
+  .card .foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:14px;border-top:1px dashed var(--line-soft)}
+  .price{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+  .price b{font-size:1.02rem;color:var(--ink)}
+  .price small{color:var(--faint);font-size:.74rem}
+  .buy{
+    font-family:var(--sans);font-size:.82rem;font-weight:700;
+    border-radius:10px;padding:8px 18px;cursor:pointer;border:1px solid transparent;
+    background:var(--pink);color:#131322;transition:all .18s ease;
+  }
+  body.p-morning .buy,body.p-day .buy{color:#fff}
+  .buy:hover{filter:brightness(1.12);box-shadow:0 0 18px rgba(255,163,207,.4)}
+  .buy:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+  .buy.owned{background:transparent;color:var(--cyan);border-color:currentColor;cursor:default;filter:none}
+  .buy.owned:hover{box-shadow:none}
+
+  /* ---------- how ---------- */
+  .how{
+    margin-top:70px;border:1px solid var(--line);border-radius:18px;background:var(--surface);
+    padding:26px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:22px;
+    backdrop-filter:blur(4px);
+  }
+  .how h4{font-family:var(--serif);font-size:.95rem;color:var(--lav);margin-bottom:8px}
+  .how p{font-size:.84rem;color:var(--dim)}
+  .how p b{color:var(--ink);font-weight:500}
+
+  footer{margin-top:60px;text-align:center;color:var(--faint);font-size:.78rem;letter-spacing:.06em}
+  footer .pen{font-family:var(--pen);font-size:1.3rem;color:var(--dim);display:block;margin-bottom:8px}
+
+  /* ---------- modal ---------- */
+  .veil{
+    position:fixed;inset:0;background:rgba(5,5,12,.72);backdrop-filter:blur(3px);
+    display:none;place-items:center;z-index:10;padding:24px;
+  }
+  .veil.open{display:grid}
+  .modal{
+    width:min(380px,100%);background:var(--surface-solid);border:1px solid var(--line);
+    border-radius:18px;padding:30px 28px;text-align:center;
+    box-shadow:0 20px 70px rgba(0,0,0,.6),0 0 40px rgba(164,143,255,.12);
+  }
+  .modal .m-ico{font-size:2rem;margin-bottom:10px}
+  .modal h3{font-family:var(--serif);font-size:1.15rem;margin-bottom:6px}
+  .modal .m-price{color:var(--pink);font-weight:700;font-variant-numeric:tabular-nums}
+  .modal p{font-size:.82rem;color:var(--dim);margin-top:10px}
+  .m-color{display:none;margin-top:16px;align-items:center;justify-content:center;gap:10px}
+  .m-color.show{display:flex}
+  .m-field{display:none;margin-top:16px}
+  .m-field.show{display:block}
+  .m-field input{
+    width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--line);
+    background:var(--chip);color:var(--ink);font-family:var(--sans);font-size:.9rem;
+  }
+  .m-field input:focus-visible{outline:2px solid var(--lav);outline-offset:1px}
+  .m-color input[type=color]{width:54px;height:38px;border:1px solid var(--line);border-radius:8px;background:var(--chip);cursor:pointer}
+  .m-color span{font-size:.8rem;color:var(--dim)}
+  .m-err{display:none;margin-top:12px;font-size:.8rem;color:#ff8fa3}
+  .m-err.show{display:block}
+  .modal .m-btns{display:flex;gap:10px;margin-top:22px}
+  .modal .m-btns button{flex:1;padding:10px 0;border-radius:10px;font-size:.86rem;font-weight:700;cursor:pointer;font-family:var(--sans)}
+  .m-cancel{background:transparent;border:1px solid var(--line);color:var(--dim)}
+  .m-cancel:hover{color:var(--ink);border-color:var(--dim)}
+  .m-ok{background:var(--pink);border:1px solid var(--pink);color:#131322}
+  body.p-morning .m-ok,body.p-day .m-ok{color:#fff}
+  .m-ok:hover{filter:brightness(1.12)}
+  .m-ok:disabled{opacity:.5;cursor:wait}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  @media (max-width:560px){
+    .moon{width:96px;height:96px;top:20px;right:8px}
+    body.p-morning .moon{top:44px}
+    body.p-dusk .moon{top:56px}
+    .hero{padding-top:48px}
+  }
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+
+<div class="page">
+
+  <header class="bar">
+    <div class="server">
+      <b>금단증상</b>
+      <span>dawn shop</span>
+    </div>
+    <div class="bar-right">
+      <div class="balance" id="balance" title="보유 포인트">
+        ✨ <b id="balance-num">0</b> <small>포인트</small>
+      </div>
+      <a class="login-btn" id="login-btn" href="/login">디스코드로 로그인</a>
+      <a class="logout" id="logout" href="/logout">로그아웃</a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="moon" aria-hidden="true"></div>
+    <p class="eyebrow">anyang bot · level shop</p>
+    <h1>잠들지 못한 밤이<br><em>포인트</em>가 되어 돌아와요</h1>
+    <p class="pen" id="hero-pen">— 새벽 4시, 아직 깨어있는 사람들을 위한 상점</p>
+
+    <div class="me guest" id="me-guest">
+      <p>디스코드로 로그인하면 내 레벨과 포인트가 보여요.</p>
+      <a class="login-btn show" href="/login">디스코드로 로그인</a>
+    </div>
+
+    <div class="me" id="me-card" style="display:none">
+      <div class="who">
+        <div class="avatar" id="me-avatar">🌌</div>
+        <div>
+          <div class="name" id="me-name">-</div>
+          <div class="lv" id="me-lv">Lv. 0</div>
+        </div>
+      </div>
+      <div class="xp">
+        <div class="row"><span>다음 레벨까지</span><span id="me-xp">0 / 0 XP</span></div>
+        <div class="track"><div class="fill" id="me-fill"></div></div>
+      </div>
+      <p class="note">채팅 1분당 <b style="color:var(--pink)">70P</b> · 음성 1분당 <b style="color:var(--pink)">80P</b></p>
+    </div>
+  </section>
+
+  <div class="shop-head">
+    <h2>오늘의 진열대
+      <small>상품은 계속 추가될 예정이에요</small>
+    </h2>
+  </div>
+
+  <section class="grid" id="grid"></section>
+
+  <section class="how">
+    <div>
+      <h4>포인트는 어떻게 모으나요</h4>
+      <p><b>채팅 1분당 70P</b>, <b>음성 1분당 80P</b>가 쌓여요. 음성에서 잠수 중이면(헤드셋 끔·혼자 있음) 1분당 30P만 쌓여요. 디스코드에서 <b>/출석체크</b>를 하면 하루 한 번 <b>1,000P</b>!</p>
+    </div>
+    <div>
+      <h4>구매하면 언제 적용되나요</h4>
+      <p>칭호와 이름색은 <b>아냥봇이 즉시</b> 디스코드에서 달아줘요. 적용이 안 보이면 관리자에게 알려주세요.</p>
+    </div>
+    <div>
+      <h4>내 포인트는 어디서 보나요</h4>
+      <p>이 페이지에 로그인하면 위에 보이고, 디스코드에서 <b>/레벨 확인</b>으로도 볼 수 있어요.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span class="pen" id="foot-pen">오늘도 무사히 새벽을 건너길.</span>
+    금단증상 · 아냥봇 레벨 상점
+  </footer>
+</div>
+
+<div class="veil" id="veil" role="dialog" aria-modal="true" aria-labelledby="m-title">
+  <div class="modal">
+    <div class="m-ico" id="m-ico">🌙</div>
+    <h3 id="m-title">상품</h3>
+    <div class="m-price" id="m-price">0P</div>
+    <p id="m-desc">구매하면 바로 적용돼요.</p>
+    <div class="m-field" id="m-name">
+      <input type="text" id="m-name-input" maxlength="20" placeholder="원하는 역할 이름 (최대 20자)">
+    </div>
+    <div class="m-color" id="m-color">
+      <input type="color" id="m-color-input" value="#ffa3cf">
+      <span>역할 색을 골라주세요</span>
+    </div>
+    <div class="m-err" id="m-err"></div>
+    <div class="m-btns">
+      <button class="m-cancel" id="m-cancel">아직요</button>
+      <button class="m-ok" id="m-ok">데려올래요</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- 시간대 테마 ----
+  const PHASES = {
+    dawn:   { cls:'',          heroPen:'— 새벽 4시, 아직 깨어있는 사람들을 위한 상점', footPen:'오늘도 무사히 새벽을 건너길.' },
+    morning:{ cls:'p-morning', heroPen:'— 밤을 무사히 건넌 당신에게, 첫 햇살을',       footPen:'오늘은 볕이 좋아요. 조금만 걸어볼까요.' },
+    day:    { cls:'p-day',     heroPen:'— 한낮의 우리도, 우리대로 괜찮아요',           footPen:'가끔은 햇빛도 그렇게 나쁘지 않아요.' },
+    dusk:   { cls:'p-dusk',    heroPen:'— 하루가 지는 시간, 오늘도 수고했어요',        footPen:'노을이 예쁘면 삼십 초만 봐주세요.' },
+    night:  { cls:'p-night',   heroPen:'— 밤이 왔어요. 이제부터는 우리의 시간',        footPen:'부디 잠들 수 있는 밤이 되기를.' },
+  };
+  function phaseByHour(h){
+    if(h < 6) return 'dawn';
+    if(h < 11) return 'morning';
+    if(h < 17) return 'day';
+    if(h < 20) return 'dusk';
+    return 'night';
+  }
+  (function(){
+    const p = PHASES[phaseByHour(new Date().getHours())];
+    document.body.className = p.cls;
+    document.getElementById('hero-pen').textContent = p.heroPen;
+    document.getElementById('foot-pen').textContent = p.footPen;
+  })();
+
+  // ---- 별하늘 ----
+  const cv = document.getElementById('stars');
+  const ctx = cv.getContext('2d');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let stars = [];
+  function seed(){
+    cv.width = innerWidth; cv.height = innerHeight;
+    stars = Array.from({length: Math.floor(innerWidth*innerHeight/9000)}, () => ({
+      x: Math.random()*cv.width, y: Math.random()*cv.height,
+      r: Math.random()*1.3+.3, base: Math.random()*.55+.25,
+      spd: Math.random()*1.6+.4, ph: Math.random()*Math.PI*2,
+      hue: Math.random()<.12 ? 'rgba(255,163,207,' : (Math.random()<.2 ? 'rgba(164,143,255,' : 'rgba(233,230,244,')
+    }));
+  }
+  function draw(t){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    for(const s of stars){
+      const a = reduced ? s.base : s.base*(0.55+0.45*Math.sin(t/1000*s.spd+s.ph));
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle = s.hue+a+')'; ctx.fill();
+    }
+    if(!reduced) requestAnimationFrame(draw);
+  }
+  seed(); draw(0);
+  addEventListener('resize', () => { seed(); if(reduced) draw(0); });
+
+  // ---- 데이터 로드 ----
+  let ME = { logged_in:false, points:0, owned:[] };
+  let ITEMS = [];
+  const fmt = n => Number(n).toLocaleString('ko-KR');
+
+  async function boot(){
+    try{
+      const [meR, itemR] = await Promise.all([ fetch('/api/me'), fetch('/api/items') ]);
+      const me = await meR.json();
+      const it = await itemR.json();
+      if(me.ok && me.logged_in) ME = me;
+      ITEMS = it.items || [];
+    }catch(e){ console.error(e); }
+    renderHeader(); renderMe(); renderGrid();
+  }
+
+  function renderHeader(){
+    document.getElementById('balance').classList.toggle('show', ME.logged_in);
+    document.getElementById('login-btn').classList.toggle('show', !ME.logged_in);
+    document.getElementById('logout').classList.toggle('show', ME.logged_in);
+    document.getElementById('balance-num').textContent = fmt(ME.points || 0);
+  }
+
+  function renderMe(){
+    const guest = document.getElementById('me-guest');
+    const card = document.getElementById('me-card');
+    if(!ME.logged_in){ guest.style.display=''; card.style.display='none'; return; }
+    guest.style.display='none'; card.style.display='';
+    document.getElementById('me-name').textContent = ME.username;
+    document.getElementById('me-lv').textContent = 'Lv. ' + ME.level;
+    document.getElementById('me-xp').textContent = fmt(ME.xp) + ' / ' + fmt(ME.xp_needed) + ' XP';
+    document.getElementById('me-fill').style.width = Math.min(100, ME.xp/ME.xp_needed*100) + '%';
+    const av = document.getElementById('me-avatar');
+    av.innerHTML = ME.avatar_url ? '<img src="'+ME.avatar_url+'" alt="">' : '🌌';
+  }
+
+  function renderGrid(){
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    for(const item of ITEMS){
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.innerHTML =
+        '<div class="top"><div class="ico">'+item.icon+'</div>'+
+        '<span class="rar '+item.rarity+'">'+(item.rarity==='n'?'일반':item.rarity==='r'?'희귀':'한정')+'</span></div>'+
+        '<h3></h3><p class="flavor"></p><p class="meta"></p>'+
+        '<div class="foot"><span class="price">✨ <b>'+fmt(item.price)+'</b> <small>P</small></span>'+
+        '<button class="buy">구매</button></div>';
+      card.querySelector('h3').textContent = item.name;
+      card.querySelector('.flavor').textContent = item.flavor;
+      card.querySelector('.meta').textContent = item.meta;
+      card.querySelector('.buy').addEventListener('click', () => openModal(item));
+      grid.appendChild(card);
+    }
+  }
+
+  // ---- 구매 모달 ----
+  const veil = document.getElementById('veil');
+  const mErr = document.getElementById('m-err');
+  const mOk = document.getElementById('m-ok');
+  let modalItem = null;
+
+  function openModal(item){
+    if(!ME.logged_in){ location.href = '/login'; return; }
+    modalItem = item;
+    document.getElementById('m-ico').textContent = item.icon;
+    document.getElementById('m-title').textContent = item.name;
+    document.getElementById('m-price').textContent = fmt(item.price) + 'P';
+    document.getElementById('m-desc').textContent =
+      ME.points >= item.price
+        ? (item.type === 'timed_role'
+            ? '구매하면 7일 동안 역할이 유지돼요. 이미 이용 중이면 7일이 연장돼요.'
+            : '구매하면 아냥봇이 바로 적용해줘요.')
+        : '포인트가 부족해요. (보유 ' + fmt(ME.points) + 'P)';
+    document.getElementById('m-name').classList.toggle('show', item.type === 'custom_role');
+    document.getElementById('m-color').classList.toggle('show', item.type === 'custom_role');
+    mErr.classList.remove('show');
+    mOk.disabled = ME.points < item.price;
+    veil.classList.add('open');
+  }
+  function closeModal(){ veil.classList.remove('open'); modalItem = null; }
+
+  mOk.addEventListener('click', async () => {
+    if(!modalItem) return;
+    mOk.disabled = true;
+    mErr.classList.remove('show');
+    const body = { item_id: modalItem.id };
+    if(modalItem.type === 'custom_role'){
+      body.role_name = document.getElementById('m-name-input').value;
+      body.color = document.getElementById('m-color-input').value;
+    }
+    try{
+      const res = await fetch('/api/buy', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if(!data.ok){
+        mErr.textContent = data.error || '구매에 실패했어요.';
+        mErr.classList.add('show');
+        mOk.disabled = false;
+        return;
+      }
+      ME.points = data.points;
+      if(modalItem.type === 'title') ME.owned.push(modalItem.id);
+      renderHeader(); renderGrid();
+      closeModal();
+    }catch(e){
+      mErr.textContent = '서버와 연결할 수 없어요. 잠시 후 다시 시도해주세요.';
+      mErr.classList.add('show');
+      mOk.disabled = false;
+    }
+  });
+  document.getElementById('m-cancel').addEventListener('click', closeModal);
+  veil.addEventListener('click', e => { if(e.target === veil) closeModal(); });
+  addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
+  boot();
+</script>
+</body>
+</html>
