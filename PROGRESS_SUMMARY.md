@@ -8,7 +8,8 @@
 디스코드 봇 "아냥봇" 프로젝트를 이어서 작업하려고 해. 지금까지 진행된 내용을 정리해줄게.
 
 ## 프로젝트 위치
-- 경로: C:\Users\82105\anyang-bot
+- 경로: C:\Users\rlarj\Desktop\anyang-bot
+- GitHub 저장소: kimgunwoo10/anyang-bot (Private)
 - Python 가상환경: .venv (이미 생성됨, requirements.txt 패키지 설치 완료)
 - discord.py 2.x, app_commands(슬래시 커맨드) 기반
 - AI는 Anthropic Claude가 아니라 Google Gemini API(무료 티어)로 구현되어 있음 — google-genai 패키지 사용, 모델은 gemini-2.5-flash (gemini-2.0-flash는 이 계정에서 무료 티어 할당량이 0이라 못 씀)
@@ -91,7 +92,7 @@
 ## 실행 방법
 PowerShell 실행 정책 문제로 .\.venv\Scripts\Activate.ps1이 막혀서, 대신 이렇게 직접 실행:
 ```
-cd C:\Users\82105\anyang-bot
+cd C:\Users\rlarj\Desktop\anyang-bot
 .\.venv\Scripts\python.exe main.py
 ```
 (활성화 스크립트 안 쓰고 venv 안의 python.exe를 직접 호출하면 됨. 굳이 실행 정책을 풀고 싶으면 `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`)
