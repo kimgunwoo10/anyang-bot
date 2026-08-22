@@ -13,6 +13,8 @@
     - 다음 레벨까지 필요한 XP = 5 * (레벨^2) + 50 * 레벨 + 100
       (레벨 0→1: 100 XP, 1→2: 155 XP, 2→3: 220 XP, ... 점점 많이 필요해짐)
     - 채팅/음성 XP는 같은 레벨 풀에 합산된다 (레벨이 따로 있지 않음)
+    - @Boost 역할(웹 상점 "@Boost 7일권") 보유 중에는 채팅/음성 XP 획득량 2배
+      (포인트는 그대로, XP만 2배)
 
 포인트 (웹 상점 화폐, XP와 별개로 적립):
     - 채팅 1분당 70P, 음성 1분당 80P, 음성 잠수 1분당 30P
@@ -62,6 +64,11 @@ VOICE_XP_MAX = 10
 VOICE_AFK_XP_MIN = 1
 VOICE_AFK_XP_MAX = 2
 
+# @Boost 역할 보유 시 XP 획득량 배수 (웹 상점 "@Boost 7일권" 혜택).
+# 역할 이름은 cogs/web_shop.py ITEMS의 boost_7d role_names와 맞춰야 한다.
+BOOST_ROLE_NAMES = ("@Boost", "Boost")
+BOOST_XP_MULTIPLIER = 2
+
 # 포인트(웹 상점 화폐) 적립량 — XP와 별개로 같이 쌓인다
 CHAT_POINTS = 70       # 채팅 1분당 (XP와 같은 60초 쿨다운에 묶여 지급)
 VOICE_POINTS = 80      # 음성 정상 참여 1분당
@@ -75,6 +82,14 @@ KST = timezone(timedelta(hours=9))
 def xp_needed_for_next_level(level: int) -> int:
     """현재 레벨에서 다음 레벨로 가는 데 필요한 XP (MEE6 공식)."""
     return 5 * (level**2) + 50 * level + 100
+
+
+def xp_multiplier(member: discord.Member) -> int:
+    """@Boost 역할 보유 시 2, 아니면 1. (역할이 만료 회수되면 자동으로 1로 돌아감)"""
+    roles = getattr(member, "roles", ())
+    if any(role.name in BOOST_ROLE_NAMES for role in roles):
+        return BOOST_XP_MULTIPLIER
+    return 1
 
 
 class LevelingCog(commands.Cog):
@@ -146,9 +161,8 @@ class LevelingCog(commands.Cog):
             return
         self._last_xp_at[key] = now
 
-        new_level = await self._add_xp(
-            message.guild.id, message.author.id, random.randint(XP_MIN, XP_MAX)
-        )
+        gained = random.randint(XP_MIN, XP_MAX) * xp_multiplier(message.author)
+        new_level = await self._add_xp(message.guild.id, message.author.id, gained)
         await self._add_points(message.guild.id, message.author.id, CHAT_POINTS)
         if new_level is not None:
             await self._announce_level_up(
@@ -184,6 +198,7 @@ class LevelingCog(commands.Cog):
                     else:
                         gained = random.randint(VOICE_XP_MIN, VOICE_XP_MAX)
                         pts = VOICE_POINTS
+                    gained *= xp_multiplier(member)
 
                     await self._add_points(guild.id, member.id, pts)
                     new_level = await self._add_xp(guild.id, member.id, gained)

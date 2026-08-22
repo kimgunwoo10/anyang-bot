@@ -49,7 +49,7 @@ ITEMS = [
         "role_names": ["@Boost", "Boost"],  # 서버에서 이 이름들로 역할을 찾고, 없으면 첫 번째 이름으로 생성
         "days": 7, "price": 100_000, "icon": "🚀", "rarity": "r", "cat": "perk",
         "flavor": "일주일 동안, 조금 더 특별하게.",
-        "meta": "@Boost 역할 7일 이용권 · 재구매하면 7일 연장",
+        "meta": "@Boost 역할 7일 이용권 · 보유 중 경험치 2배 · 재구매하면 7일 연장",
     },
     {
         "id": "custom_role", "type": "custom_role", "name": "개인역할 제작권",
@@ -284,6 +284,27 @@ class WebShopCog(commands.Cog):
         )
         owned = [r["item_id"] for r in owned_rows]
 
+        # 현재 이용 중인 기간제 역할 (item_id -> 만료 시각 유닉스 초).
+        # 상점에서 "적용중" 표시에 쓴다.
+        active: dict[str, int] = {}
+        now = int(time.time())
+        for it in ITEMS:
+            if it["type"] != "timed_role":
+                continue
+            role = None
+            for cand in it["role_names"]:
+                role = discord.utils.get(guild.roles, name=cand)
+                if role is not None:
+                    break
+            if role is None:
+                continue
+            trow = await db.fetch_one(
+                "SELECT expires_at FROM timed_roles WHERE guild_id = ? AND user_id = ? AND role_id = ?",
+                (guild.id, user_id, role.id),
+            )
+            if trow and trow["expires_at"] > now:
+                active[it["id"]] = trow["expires_at"]
+
         return web.json_response(
             {
                 "ok": True,
@@ -296,6 +317,7 @@ class WebShopCog(commands.Cog):
                 "xp_needed": needed,
                 "points": points,
                 "owned": owned,
+                "active": active,
             }
         )
 

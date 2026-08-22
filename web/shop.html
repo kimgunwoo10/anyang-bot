@@ -199,6 +199,11 @@
   .buy:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
   .buy.owned{background:transparent;color:var(--cyan);border-color:currentColor;cursor:default;filter:none}
   .buy.owned:hover{box-shadow:none}
+  /* 기간제 역할 이용 중 - 연두색 "적용중" (눌러서 연장 가능) */
+  .buy.active{background:#8ce56e;color:#15310e}
+  body.p-morning .buy.active,body.p-day .buy.active{color:#15310e}
+  .buy.active:hover{filter:brightness(1.06);box-shadow:0 0 18px rgba(140,229,110,.45)}
+  .buy.active:focus-visible{outline:2px solid #8ce56e;outline-offset:2px}
 
   /* ---------- how ---------- */
   .how{
@@ -405,7 +410,7 @@
   addEventListener('resize', () => { seed(); if(reduced) draw(0); });
 
   // ---- 데이터 로드 ----
-  let ME = { logged_in:false, points:0, owned:[] };
+  let ME = { logged_in:false, points:0, owned:[], active:{} };
   let ITEMS = [];
   const fmt = n => Number(n).toLocaleString('ko-KR');
 
@@ -446,16 +451,23 @@
     for(const item of ITEMS){
       const card = document.createElement('article');
       card.className = 'card';
+      // 기간제 역할을 이용 중이면 버튼을 연두색 "적용중"으로 (눌러서 연장 가능)
+      const activeUntil = ME.active && ME.active[item.id];
       card.innerHTML =
         '<div class="top"><div class="ico">'+item.icon+'</div>'+
         '<span class="rar '+item.rarity+'">'+(item.rarity==='n'?'일반':item.rarity==='r'?'희귀':'한정')+'</span></div>'+
         '<h3></h3><p class="flavor"></p><p class="meta"></p>'+
         '<div class="foot"><span class="price">✨ <b>'+fmt(item.price)+'</b> <small>P</small></span>'+
-        '<button class="buy">구매</button></div>';
+        '<button class="buy'+(activeUntil ? ' active' : '')+'">'+(activeUntil ? '적용중' : '구매')+'</button></div>';
       card.querySelector('h3').textContent = item.name;
       card.querySelector('.flavor').textContent = item.flavor;
       card.querySelector('.meta').textContent = item.meta;
-      card.querySelector('.buy').addEventListener('click', () => openModal(item));
+      const buyBtn = card.querySelector('.buy');
+      if(activeUntil){
+        const d = new Date(activeUntil * 1000);
+        buyBtn.title = (d.getMonth()+1)+'/'+d.getDate()+'까지 이용 중 · 눌러서 연장';
+      }
+      buyBtn.addEventListener('click', () => openModal(item));
       grid.appendChild(card);
     }
   }
@@ -508,9 +520,9 @@
         return;
       }
       ME.points = data.points;
-      if(modalItem.type === 'title') ME.owned.push(modalItem.id);
-      renderHeader(); renderGrid();
+      renderHeader();
       closeModal();
+      await boot(); // 서버에서 최신 상태(적용중 여부 포함)를 다시 받아와 화면 갱신
     }catch(e){
       mErr.textContent = '서버와 연결할 수 없어요. 잠시 후 다시 시도해주세요.';
       mErr.classList.add('show');
